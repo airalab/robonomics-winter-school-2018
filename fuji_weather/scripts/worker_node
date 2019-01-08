@@ -1,0 +1,113 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Standart, System and Third party
+from collections import namedtuple
+from queue import Queue
+from threading import Thread
+from http.client import HTTPConnection
+
+# ROS
+import rospy
+from std_msgs.msg import String
+from std_srvs.srv import Empty
+
+# AIRA
+from robonomics_liability.msg import Liability
+from robonomics_liability.srv import StartLiability, StartLiabilityRequest
+from robonomics_liability.srv import FinishLiability, FinishLiabilityRequest
+
+
+class WorkerNode:
+    '''
+      You need a queue to store any new liabilities while the CPS performs a task
+    '''
+    liability_queue = Queue()
+    in_process = False
+
+    # TODO: need an objective messages collector and empty objective (by new liability) starter
+    def __init__(self):
+        rospy.init_node('worker')
+        rospy.loginfo('Launching worker node...')
+
+        '''
+          Any new liabilities for our CPS will be published to /liability/ready topic
+        '''
+        rospy.Subscriber('/liability/ready', Liability, self.on_new_liability)
+
+        '''
+          If you have a liability and the CPS isn't busy you get the new liability here
+        '''
+        rospy.Subscriber('next_liability', Liability, self.subscribe_and_start)
+
+        self.next_liability = rospy.Publisher('next_liability', Liability, queue_size=128)
+
+        rospy.wait_for_service('liability/finish')
+
+        '''
+          These are required services to start and finish a liability
+        '''
+        self.liability_proxy = namedtuple('liability_srvs_proxy', ['start', 'finish'])(
+                                          rospy.ServiceProxy('liability/start', StartLiability),
+                                          rospy.ServiceProxy('liability/finish', FinishLiability))
+
+        rospy.loginfo('Worker node launched.')
+
+    '''
+      Simply store a new liability. See the next method below which is running in concurrent thread
+    '''
+    def on_new_liability(self, msg):
+        self.liability_queue.put(msg)
+        rospy.loginfo("Got new liability %s", msg.address)
+
+    '''
+      Continuous check weather there's a new liability and the CPS isn't busy
+    '''
+    def _process_liability_queue(self):
+        while not rospy.is_shutdown() and not self.in_process:
+            msg = self.liability_queue.get()
+            self.next_liability.publish(msg)
+
+    '''
+      Any topics in objective would appear under /liability/eth_0x... prefix
+      Here you register all necessary topics to callbacks and start the liability
+    '''
+    def subscribe_and_start(self, liability):
+        rospy.loginfo('Starting process...')
+
+        '''
+          Register any topics you need to publish logs, data etc
+        '''
+        prefix = '/liability/eth_' + liability.address.address
+        pub = rospy.Publisher(prefix+'/data', String, queue_size=128)
+
+        '''
+          Here you get a message from an objective's topic and perform some task
+          After this you have to finish the liability
+        '''
+        def callback(task):
+            rospy.loginfo('Got new tast: %s', task)
+
+            # Get weather around mt. Fuji
+            api_key = 'e4119cc38e611fcda8d9a03afde0eec4'
+            c = HTTPConnection('api.openweathermap.org')
+            c.request('GET', '/data/2.5/weather?q=Fuji,jp&appid='+api_key)
+            result = String(data=c.getresult().read())
+
+            pub.publish(result)
+            rospy.loginfo('Worker works: {}'.format(result))
+
+            self.liability_proxy.finish(liability.address.address, True)
+            rospy.loginfo('Process complete.')
+            self.in_process = False
+        rospy.Subscriber(prefix + '/task', String, callback)
+
+        self.in_process = True
+        self.liability_proxy.start(liability.address.address)
+
+    def spin(self):
+        Thread(target=self._process_liability_queue, daemon=True).start()
+        rospy.spin()
+
+if __name__ == '__main__':
+    WorkerNode().spin()
