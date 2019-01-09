@@ -92,7 +92,8 @@ class WorkerNode:
             api_key = 'e4119cc38e611fcda8d9a03afde0eec4'
             c = HTTPConnection('api.openweathermap.org')
             c.request('GET', '/data/2.5/weather?q=Fuji,jp&appid='+api_key)
-            result = String(data=c.getresult().read())
+            res = c.getresponse()
+            result = String(data=res.read().decode('utf-8'))
 
             pub.publish(result)
             rospy.loginfo('Worker works: {}'.format(result))
