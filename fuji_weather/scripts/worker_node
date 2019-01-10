@@ -19,7 +19,8 @@ from std_srvs.srv import Empty
 
 # AIRA
 from ethereum_common.signer import demand_hash
-from robonomics_liability.msg import Liability, Demand, Result
+from robonomics_msgs.msg import Demand, Result
+from robonomics_liability.msg import Liability
 from robonomics_liability.srv import StartLiability, StartLiabilityRequest
 from robonomics_liability.srv import FinishLiability, FinishLiabilityRequest
 
