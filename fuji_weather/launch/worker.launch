@@ -1,6 +1,6 @@
 <launch>
   <node name="worker" pkg="fuji_weather" type="worker_node" output="screen">
-    <!-- A unique model Qm...., hello_aira model by default -->
-    <param name="model" value="QmUB6ajZTLLMZg7re1v4hw44aoG8HDQDHr9JyujU264Aw2" />
+    <!-- A unique model Qm.... -->
+    <param name="model" value="Qmd6bn2JGW26hSx7g5gVCmfgB7uigRPrhAukJn77ee3bMM" />
   </node>
 </launch>

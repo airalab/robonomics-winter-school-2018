@@ -2,8 +2,8 @@
   <node name="trader" pkg="fuji_weather" type="trader_node" output="screen">
     <!-- Address of a lighthouse you work on, airalab on sidechain lighthouse by default -->
     <param name="lighthouse" value="0xE85764E29583224C1D063639d2AeeeD7c389DF4d" />
-    <!-- A unique model Qm...., hello_aira model by default -->
-    <param name="model" value="QmUB6ajZTLLMZg7re1v4hw44aoG8HDQDHr9JyujU264Aw2" />
+    <!-- A unique model Qm.... -->
+    <param name="model" value="Qmd6bn2JGW26hSx7g5gVCmfgB7uigRPrhAukJn77ee3bMM" />
     <!-- A token your CPS works with, bridged XRT token by default -->
     <param name="token" value="0x093ac06910f23570292fd5027a4fA558ed4Cd010" />
     <!-- Ethereum blocks lifetime, ~12-15 sec for one -->
