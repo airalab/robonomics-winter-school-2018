@@ -58,7 +58,7 @@
                     {{ str }}<br />
                   </span>
                 </div>
-                <v-divider />
+                <v-divider class="my-3" />
               </div>
             </v-card-text>
           </v-card>
@@ -70,6 +70,7 @@
 
 <script>
 import { Token } from 'robonomics-js'
+import _findIndex from 'lodash/findIndex'
 import getRobonomics from '../utils/robonomics'
 import ipfsBagCat from '../utils/ipfs'
 import * as config from '../config'
@@ -110,15 +111,20 @@ export default {
           })
           robonomics.getResult((msg) => {
             console.log('result unverified', msg)
-            if (msg.liability === '0x0000000000000000000000000000000000000000') {
-              this.frees.push({
-                hash: msg.result,
-                result: []
+            if (web3.toChecksumAddress(msg.liability) === web3.toChecksumAddress(robonomics.account)) {
+              const i = _findIndex(this.frees, (item) => {
+                return item.hash === msg.result
               })
-              const k = this.frees.length - 1
-              ipfsBagCat(msg.result, {}, (bag) => {
-                this.frees[k].result.push(bag.data)
-              })
+              if (i < 0) {
+                this.frees.push({
+                  hash: msg.result,
+                  result: []
+                })
+                const k = this.frees.length - 1
+                ipfsBagCat(msg.result, {}, (bag) => {
+                  this.frees[k].result.push(bag.data)
+                })
+              }
             }
           })
           this.robonomicsStatus = true
@@ -127,8 +133,6 @@ export default {
   },
   methods: {
     order () {
-      this.demand = null
-      this.liability = null
       this.loadingOrder = true
       web3.eth.getBlock('latest', (e, r) => {
         const demand = {
