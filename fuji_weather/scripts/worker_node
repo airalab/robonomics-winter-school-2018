@@ -2,10 +2,11 @@
 # -*- coding: utf-8 -*-
 
 # Standart, System and Third party
-from collections import namedtuple
+from rosbag import Bag
 from queue import Queue
 from ipfsapi import connect
 from threading import Thread
+from collections import namedtuple
 from http.client import HTTPConnection
 from tempfile import NamedTemporaryFile
 from eth_account.messages import defunct_hash_message
@@ -18,6 +19,8 @@ from std_msgs.msg import String
 from std_srvs.srv import Empty
 
 # AIRA
+from ipfs_common.msg import Multihash
+from ethereum_common.msg import Address
 from ethereum_common.signer import demand_hash
 from robonomics_msgs.msg import Demand, Result
 from robonomics_liability.msg import Liability
@@ -43,7 +46,12 @@ class WorkerNode:
           Any new demand will be handled by CPS
         '''
         ## TODO: uncomment if you want to provide service free.
-        #rospy.Subscribe('/liability/infochan/incoming/demand', Demand, self.on_new_demand)
+        #rospy.Subscriber('/liability/infochan/incoming/demand', Demand, self.on_new_demand)
+        
+        '''
+          Simple result message publisher.
+        '''
+        self.result = rospy.Publisher('/liability/infochan/eth/signing/result', Result, queue_size=128)
 
         '''
           Any new liabilities for our CPS will be published to /liability/ready topic
@@ -79,14 +87,18 @@ class WorkerNode:
       Do work for free and publish result message with request sender as liability contract.
     '''
     def on_new_demand(self, msg):
-        rospy.loginfo('Incoming demand %s...', str(msg))
-        if msg.model == rospy.get_param('~model'):
+        rospy.loginfo('Incoming demand:\n%s', str(msg))
+        if msg.model.multihash == rospy.get_param('~model'):
             # recover account of sender
             msg_hash = defunct_hash_message(demand_hash(msg))
             sender_account = Account.recoverHash(msg_hash, signature=msg.signature)
+            rospy.loginfo('Demand sender: %s', sender_account)
 
-            # doing and publish work result
-            res.publish(self.make_result(sender_account, self.do_work()))
+            # do work and pack IPFS hash to message 
+            result_msg = self.make_result(sender_account, self.do_work())
+
+            # publish result message
+            self.result.publish(result_msg)
 
     '''
       Continuous check weather there's a new liability and the CPS isn't busy
@@ -133,16 +145,26 @@ class WorkerNode:
     '''
     def make_result(self, sender_account, data_msg):
         with NamedTemporaryFile(delete=False) as tmpfile:
-            recorder = rosbag.Bag(tmpfile.name, 'w')
+            recorder = Bag(tmpfile.name, 'w')
             recorder.write('/data', data_msg)
             recorder.write('/id', String(data=str(self.ipfs.id())))
             recorder.close()
 
-            res = Result()
-            res.liability = sender_account
-            res.result = self.ipfs.add(tmpfile.name)
-            res.success = True
-            return res
+            msg = Result()
+            msg.success = True
+            msg.liability = Address()
+            msg.liability.address = sender_account
+            msg.result = Multihash()
+
+            ipfs_response = self.ipfs.add(tmpfile.name)
+            try:
+                msg.result.multihash = ipfs_response['Hash']
+            except TypeError:
+                rospy.logwarn('IPFS add proceeding error: %s', ipfs_response[1]['Message'])
+                msg.result.multihash = ipfs_response[0]['Hash']
+
+            rospy.loginfo('Result hash: %s', msg.result.multihash)
+            return msg 
 
     def do_work(self):
         ## PLACE YOUR WORKER CODE HERE
