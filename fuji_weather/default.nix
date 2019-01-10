@@ -5,7 +5,7 @@
 
 mkRosPackage rec {
   name = "${pname}-${version}";
-  pname = "autonomous_agent_template";
+  pname = "fuji_weather";
   version = "master";
 
   src = ./.;
@@ -13,8 +13,8 @@ mkRosPackage rec {
   propagatedBuildInputs = [ robonomics_comm ];
 
   meta = with stdenv.lib; {
-    description = "Simple modular AIRA example effort";
-    homepage = http://github.com/airalab/autonomous_agent_template;
+    description = "Robonomics winter school fuji lesson";
+    homepage = http://github.com/airalab/robonomics-winter-school-2018;
     license = licenses.bsd3;
     maintainers = with maintainers; [ akru ];
   };
