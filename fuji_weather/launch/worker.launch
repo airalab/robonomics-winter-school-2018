@@ -1,3 +1,6 @@
 <launch>
-  <node name="worker" pkg="autonomous_agent_template" type="worker_node" output="screen" />
+  <node name="worker" pkg="fuji_weather" type="worker_node" output="screen">
+    <!-- A unique model Qm...., hello_aira model by default -->
+    <param name="model" value="QmUB6ajZTLLMZg7re1v4hw44aoG8HDQDHr9JyujU264Aw2" />
+  </node>
 </launch>

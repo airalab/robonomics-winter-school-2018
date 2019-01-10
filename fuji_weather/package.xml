@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>autonomous_agent_template</name>
+  <name>fuji_weather</name>
   <version>0.1.0</version>
   <description>Simple modular AIRA example package.</description>
   <author email="a.khssnv@gmail.com">Alisher A. Khassanov</author>

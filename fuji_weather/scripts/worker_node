@@ -4,8 +4,13 @@
 # Standart, System and Third party
 from collections import namedtuple
 from queue import Queue
+from ipfsapi import connect
 from threading import Thread
 from http.client import HTTPConnection
+from tempfile import NamedTemporaryFile
+from eth_account.messages import defunct_hash_message
+from eth_account.account import Account
+
 
 # ROS
 import rospy
@@ -13,7 +18,8 @@ from std_msgs.msg import String
 from std_srvs.srv import Empty
 
 # AIRA
-from robonomics_liability.msg import Liability
+from ethereum_common.signer import demand_hash
+from robonomics_liability.msg import Liability, Demand, Result
 from robonomics_liability.srv import StartLiability, StartLiabilityRequest
 from robonomics_liability.srv import FinishLiability, FinishLiabilityRequest
 
@@ -29,6 +35,14 @@ class WorkerNode:
     def __init__(self):
         rospy.init_node('worker')
         rospy.loginfo('Launching worker node...')
+
+        self.ipfs = connect()
+
+        '''
+          Any new demand will be handled by CPS
+        '''
+        ## TODO: uncomment if you want to provide service free.
+        #rospy.Subscribe('/liability/infochan/incoming/demand', Demand, self.on_new_demand)
 
         '''
           Any new liabilities for our CPS will be published to /liability/ready topic
@@ -61,6 +75,19 @@ class WorkerNode:
         rospy.loginfo("Got new liability %s", msg.address)
 
     '''
+      Do work for free and publish result message with request sender as liability contract.
+    '''
+    def on_new_demand(self, msg):
+        rospy.loginfo('Incoming demand %s...', str(msg))
+        if msg.model == rospy.get_param('~model'):
+            # recover account of sender
+            msg_hash = defunct_hash_message(demand_hash(msg))
+            sender_account = Account.recoverHash(msg_hash, signature=msg.signature)
+
+            # doing and publish work result
+            res.publish(self.make_result(sender_account, self.do_work()))
+
+    '''
       Continuous check weather there's a new liability and the CPS isn't busy
     '''
     def _process_liability_queue(self):
@@ -88,13 +115,7 @@ class WorkerNode:
         def callback(task):
             rospy.loginfo('Got new tast: %s', task)
 
-            # Get weather around mt. Fuji
-            api_key = 'e4119cc38e611fcda8d9a03afde0eec4'
-            c = HTTPConnection('api.openweathermap.org')
-            c.request('GET', '/data/2.5/weather?q=Fuji,jp&appid='+api_key)
-            res = c.getresponse()
-            result = String(data=res.read().decode('utf-8'))
-
+            result = self.do_work()
             pub.publish(result)
             rospy.loginfo('Worker works: {}'.format(result))
 
@@ -105,6 +126,31 @@ class WorkerNode:
 
         self.in_process = True
         self.liability_proxy.start(liability.address.address)
+
+    '''
+      Make Result message
+    '''
+    def make_result(self, sender_account, data_msg):
+        with NamedTemporaryFile(delete=False) as tmpfile:
+            recorder = rosbag.Bag(tmpfile.name, 'w')
+            recorder.write('/data', data_msg)
+            recorder.write('/id', String(data=str(self.ipfs.id())))
+            recorder.close()
+
+            res = Result()
+            res.liability = sender_account
+            res.result = self.ipfs.add(tmpfile.name)
+            res.success = True
+            return res
+
+    def do_work(self):
+        ## PLACE YOUR WORKER CODE HERE
+        # Get weather around mt. Fuji
+        api_key = 'e4119cc38e611fcda8d9a03afde0eec4'
+        c = HTTPConnection('api.openweathermap.org')
+        c.request('GET', '/data/2.5/weather?q=Fuji,jp&appid='+api_key)
+        res = c.getresponse()
+        return String(data=res.read().decode('utf-8'))
 
     def spin(self):
         Thread(target=self._process_liability_queue, daemon=True).start()

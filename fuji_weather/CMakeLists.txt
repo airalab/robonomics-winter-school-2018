@@ -1,11 +1,9 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(autonomous_agent_template)
+project(fuji_weather)
 
 find_package(catkin REQUIRED COMPONENTS
   rospy
 )
-
-catkin_python_setup()
 
 catkin_package()
 

@@ -1,5 +1,5 @@
 <launch>
-  <node name="trader" pkg="autonomous_agent_template" type="trader_node" output="screen">
+  <node name="trader" pkg="fuji_weather" type="trader_node" output="screen">
     <!-- Address of a lighthouse you work on, airalab on sidechain lighthouse by default -->
     <param name="lighthouse" value="0xE85764E29583224C1D063639d2AeeeD7c389DF4d" />
     <!-- A unique model Qm...., hello_aira model by default -->
