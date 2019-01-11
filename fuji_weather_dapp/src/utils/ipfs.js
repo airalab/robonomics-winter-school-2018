@@ -9,7 +9,7 @@ export default (hash, options, cb) => (
     .then((bag) => {
       // console.log(bag)
       bag.readMessages(options, (result) => {
-        cb(result.message)
+        cb(result)
       })
     })
 )
