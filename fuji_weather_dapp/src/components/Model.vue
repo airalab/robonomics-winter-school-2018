@@ -22,8 +22,16 @@
                 <v-layout row wrap>
                   <v-flex md12 class="text-xs-center">
                     Lighthouse: <b>{{ lighthouse.name }}</b>
-                    <ModelForm ref="modelForm" class="mt-5" />
+                    <div class="my-3"><b>{{model}}</b></div>
+                    <v-alert
+                      v-if="modelError!==''"
+                      :value="true"
+                      type="error"
+                    >
+                      {{modelError}}
+                    </v-alert>
                     <v-btn
+                      v-if="modelError===''"
                       :loading="loadingOrder"
                       :disabled="loadingOrder"
                       color="primary"
@@ -77,18 +85,15 @@
 <script>
 import { Token } from 'robonomics-js'
 import _findIndex from 'lodash/findIndex'
-import _has from 'lodash/has'
 import getRobonomics from '../utils/robonomics'
-import ipfsBagCat from '../utils/ipfs'
+import getIpfs, { cat as ipfsCat } from '../utils/ipfs'
+import rosBag from '../utils/rosBag'
+import { getModel } from '../utils/utils'
 import * as config from '../config'
-import ModelForm from './ModelForm'
 
 let robonomics
 
 export default {
-  components: {
-    ModelForm
-  },
   data () {
     return {
       robonomicsStatus: false,
@@ -100,11 +105,21 @@ export default {
       },
       demand: null,
       frees: [],
-      models: {}
+      model: '',
+      modelError: ''
     }
   },
   created () {
-    getRobonomics()
+    getModel()
+      .then((r) => {
+        if (r === '' || r.length !== 46 || !/^Qm/.test(r)) {
+          this.modelError = 'Error model'
+        } else {
+          this.model = r
+        }
+        return getIpfs()
+      })
+      .then(() => getRobonomics())
       .then((r) => {
         robonomics = r
         robonomics.ready().then(() => {
@@ -115,11 +130,9 @@ export default {
           }
           this.lighthouse.name = robonomics.lighthouse.name
           this.lighthouse.address = robonomics.lighthouse.address
-          this.models[config.MODEL_TRADE] = true
-          robonomics.getDemand(config.MODEL_TRADE, (msg) => {
+          robonomics.getDemand(this.model, (msg) => {
             if (msg.account === robonomics.account) {
               this.demand = msg
-              return this.emulatorKfc(msg)
             }
           })
           robonomics.getResult((msg) => {
@@ -134,13 +147,16 @@ export default {
                   result: []
                 })
                 const k = this.frees.length - 1
-                ipfsBagCat(msg.result, { topics: ['/data'] }, (bag) => {
-                  const json = JSON.parse(bag.message.data)
-                  this.frees[k].result.push({
-                    json,
-                    str: JSON.stringify(json, undefined, 2)
+                ipfsCat(msg.result)
+                  .then((r) => {
+                    rosBag(new Blob([r]), (bag) => {
+                      const json = JSON.parse(bag.message.data)
+                      this.frees[k].result.push({
+                        json,
+                        str: JSON.stringify(json, undefined, 2)
+                      })
+                    }, { topics: ['/data'] })
                   })
-                })
               }
             }
           })
@@ -149,23 +165,8 @@ export default {
       })
   },
   methods: {
-    emulatorKfc (demand) {
-      return robonomics.postResult({ liability: robonomics.account, success: true, result: 'QmVAFgUxBitKqtV2sjaYcHkKfcAPVy3GswhaE5n5bcgLkf' })
-        .then(() => {
-          console.log('result send msg')
-        })
-    },
     order () {
-      if (this.$refs.modelForm.$refs.form.validate()) {
-        if (!_has(this.models, this.$refs.modelForm.model)) {
-          this.models[this.$refs.modelForm.model] = true
-          robonomics.getDemand(this.$refs.modelForm.model, (msg) => {
-            if (msg.account === robonomics.account) {
-              this.demand = msg
-              return this.emulatorKfc(msg)
-            }
-          })
-        }
+      if (this.model.length === 46 && /^Qm/.test(this.model)) {
         this.loadingOrder = true
         web3.eth.getBlock('latest', (e, r) => {
           const demand = {
@@ -177,7 +178,7 @@ export default {
             validatorFee: 0,
             deadline: r.number + 1000
           }
-          robonomics.post('demand', this.$refs.modelForm.model, demand)
+          robonomics.post('demand', this.model, demand)
             .then(() => {
               this.loadingOrder = false
             })

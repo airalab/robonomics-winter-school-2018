@@ -77,7 +77,8 @@
 import { Token } from 'robonomics-js'
 import _findIndex from 'lodash/findIndex'
 import getRobonomics from '../utils/robonomics'
-import ipfsBagCat from '../utils/ipfs'
+import getIpfs, { cat as ipfsCat } from '../utils/ipfs'
+import rosBag from '../utils/rosBag'
 import * as config from '../config'
 
 let robonomics
@@ -98,7 +99,8 @@ export default {
     }
   },
   created () {
-    getRobonomics()
+    getIpfs()
+      .then(() => getRobonomics())
       .then((r) => {
         robonomics = r
         robonomics.ready().then(() => {
@@ -126,13 +128,16 @@ export default {
                   result: []
                 })
                 const k = this.frees.length - 1
-                ipfsBagCat(msg.result, { topics: ['/data'] }, (bag) => {
-                  const json = JSON.parse(bag.message.data)
-                  this.frees[k].result.push({
-                    json,
-                    str: JSON.stringify(json, undefined, 2)
+                ipfsCat(msg.result)
+                  .then((r) => {
+                    rosBag(new Blob([r]), (bag) => {
+                      const json = JSON.parse(bag.message.data)
+                      this.frees[k].result.push({
+                        json,
+                        str: JSON.stringify(json, undefined, 2)
+                      })
+                    }, { topics: ['/data'] })
                   })
-                })
               }
             }
           })
