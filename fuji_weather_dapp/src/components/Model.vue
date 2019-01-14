@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h1 class="text-xs-center">Fuji weather</h1>
+    <h1 class="text-xs-center">Select weather</h1>
     <v-container v-if="!robonomicsStatus" fluid fill-height class="px-3">
       <v-layout
         justify-center
@@ -22,7 +22,16 @@
                 <v-layout row wrap>
                   <v-flex md12 class="text-xs-center">
                     Lighthouse: <b>{{ lighthouse.name }}</b>
+                    <div class="my-3"><b>{{model}}</b></div>
+                    <v-alert
+                      v-if="modelError!==''"
+                      :value="true"
+                      type="error"
+                    >
+                      {{modelError}}
+                    </v-alert>
                     <v-btn
+                      v-if="modelError===''"
                       :loading="loadingOrder"
                       :disabled="loadingOrder"
                       color="primary"
@@ -77,7 +86,9 @@
 import { Token } from 'robonomics-js'
 import _findIndex from 'lodash/findIndex'
 import getRobonomics from '../utils/robonomics'
-import ipfsBagCat from '../utils/ipfs'
+import getIpfs, { cat as ipfsCat } from '../utils/ipfs'
+import rosBag from '../utils/rosBag'
+import { getModel } from '../utils/utils'
 import * as config from '../config'
 
 let robonomics
@@ -88,17 +99,27 @@ export default {
       robonomicsStatus: false,
       token: null,
       loadingOrder: false,
-      model: config.MODEL_TRADE,
       lighthouse: {
         name: '',
         address: ''
       },
       demand: null,
-      frees: []
+      frees: [],
+      model: '',
+      modelError: ''
     }
   },
   created () {
-    getRobonomics()
+    getModel()
+      .then((r) => {
+        if (r === '' || r.length !== 46 || !/^Qm/.test(r)) {
+          this.modelError = 'Error model'
+        } else {
+          this.model = r
+        }
+        return getIpfs()
+      })
+      .then(() => getRobonomics())
       .then((r) => {
         robonomics = r
         robonomics.ready().then(() => {
@@ -126,13 +147,16 @@ export default {
                   result: []
                 })
                 const k = this.frees.length - 1
-                ipfsBagCat(msg.result, { topics: ['/data'] }, (bag) => {
-                  const json = JSON.parse(bag.message.data)
-                  this.frees[k].result.push({
-                    json,
-                    str: JSON.stringify(json, undefined, 2)
+                ipfsCat(msg.result)
+                  .then((r) => {
+                    rosBag(new Blob([r]), (bag) => {
+                      const json = JSON.parse(bag.message.data)
+                      this.frees[k].result.push({
+                        json,
+                        str: JSON.stringify(json, undefined, 2)
+                      })
+                    }, { topics: ['/data'] })
                   })
-                })
               }
             }
           })
@@ -142,25 +166,27 @@ export default {
   },
   methods: {
     order () {
-      this.loadingOrder = true
-      web3.eth.getBlock('latest', (e, r) => {
-        const demand = {
-          objective: config.OBJECTIVE_TRADE,
-          token: this.token.address,
-          cost: config.PRICE,
-          lighthouse: robonomics.lighthouse.address,
-          validator: '0x0000000000000000000000000000000000000000',
-          validatorFee: 0,
-          deadline: r.number + 1000
-        }
-        robonomics.post('demand', this.model, demand)
-          .then(() => {
-            this.loadingOrder = false
-          })
-          .catch((e) => {
-            this.loadingOrder = false
-          })
-      })
+      if (this.model.length === 46 && /^Qm/.test(this.model)) {
+        this.loadingOrder = true
+        web3.eth.getBlock('latest', (e, r) => {
+          const demand = {
+            objective: config.OBJECTIVE_TRADE,
+            token: this.token.address,
+            cost: config.PRICE,
+            lighthouse: robonomics.lighthouse.address,
+            validator: '0x0000000000000000000000000000000000000000',
+            validatorFee: 0,
+            deadline: r.number + 1000
+          }
+          robonomics.post('demand', this.model, demand)
+            .then(() => {
+              this.loadingOrder = false
+            })
+            .catch((e) => {
+              this.loadingOrder = false
+            })
+        })
+      }
     }
   }
 }
