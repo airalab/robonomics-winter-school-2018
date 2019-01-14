@@ -6,10 +6,14 @@
           <v-layout justify-center row wrap>
             <v-flex sm12 md10 lg6>
               <v-layout row wrap>
-                <v-flex xs12 class="text-xs-center">
+                <v-flex xs12 sm6 class="text-xs-center text-sm-left">
                   <router-link to="/">
                     <img alt="" src="static/assets/i/logo.svg" style="height: 45px;"/>
                   </router-link>
+                </v-flex>
+                <v-flex xs12 sm6 class="text-xs-center text-sm-right">
+                  <v-btn to="/" outline>Main</v-btn>
+                  <v-btn to="/model" outline>Model</v-btn>
                 </v-flex>
               </v-layout>
             </v-flex>

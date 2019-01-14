@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
-import Market from '@/components/Market'
+import All from '@/components/All'
+import Model from '@/components/Model'
 
 Vue.use(Router)
 
@@ -8,8 +9,13 @@ export default new Router({
   routes: [
     {
       path: '/',
-      name: 'Market',
-      component: Market
+      name: 'All',
+      component: All
+    },
+    {
+      path: '/model',
+      name: 'Model',
+      component: Model
     }
   ]
 })
