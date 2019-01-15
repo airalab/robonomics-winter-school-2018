@@ -1,0 +1,8 @@
+<launch>
+  <node name="worker" pkg="fuji_weather_acl" type="worker_node" output="screen">
+    <!-- A unique model Qm.... -->
+    <param name="model" value="Qmd6bn2JGW26hSx7g5gVCmfgB7uigRPrhAukJn77ee3bMM" />
+    <!-- A contract address of ACL storage -->
+    <param name="acl_address" value="0x59869c9b7297E67E0bD7be62e1561f9c292Ec5cD" />
+  </node>
+</launch>

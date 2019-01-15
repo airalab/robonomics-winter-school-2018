@@ -11,7 +11,8 @@ from http.client import HTTPConnection
 from tempfile import NamedTemporaryFile
 from eth_account.messages import defunct_hash_message
 from eth_account.account import Account
-
+from web3 import Web3, HTTPProvider
+from json import loads
 
 # ROS
 import rospy
@@ -27,6 +28,7 @@ from robonomics_liability.msg import Liability
 from robonomics_liability.srv import StartLiability, StartLiabilityRequest
 from robonomics_liability.srv import FinishLiability, FinishLiabilityRequest
 
+acl_abi = loads('[{"constant": false,"inputs": [{"name": "_member","type": "address"}],"name": "add","outputs": [],"payable": false,"stateMutability": "nonpayable","type": "function"},{"constant": false,"inputs": [{"name": "_member","type": "address"}],"name": "remove","outputs": [],"payable": false,"stateMutability": "nonpayable","type": "function"},{"constant": true,"inputs": [{"name": "","type": "address"}],"name": "isMember","outputs": [{"name": "","type": "bool"}],"payable": false,"stateMutability": "view","type": "function"},{"inputs": [{"name": "_owner","type": "address"}],"payable": false,"stateMutability": "nonpayable","type": "constructor"}]')
 
 class WorkerNode:
     '''
@@ -41,6 +43,8 @@ class WorkerNode:
         rospy.loginfo('Launching worker node...')
 
         self.ipfs = connect('https://ipfs.infura.io', 5001)
+        web3 = Web3(HTTPProvider('https://sidechain.aira.life/rpc'))
+        self.acl = web3.eth.contract(abi=acl_abi, address=rospy.get_param('~acl_address'))
 
         '''
           Any new demand will be handled by CPS
@@ -94,11 +98,13 @@ class WorkerNode:
             sender_account = Account.recoverHash(msg_hash, signature=msg.signature)
             rospy.loginfo('Demand sender: %s', sender_account)
 
-            # do work and pack IPFS hash to message 
-            result_msg = self.make_result(sender_account, self.do_work())
-
-            # publish result message
-            self.result.publish(result_msg)
+            if self.acl.call().isMember(sender_account):
+                # do work and pack IPFS hash to message 
+                result_msg = self.make_result(sender_account, self.do_work())
+                # publish result message
+                self.result.publish(result_msg)
+            else:
+                rospy.logwarn('sender is not in ACL, skip')
 
     '''
       Continuous check weather there's a new liability and the CPS isn't busy
