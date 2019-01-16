@@ -23,6 +23,7 @@
                   <v-flex md12 class="text-xs-center">
                     Lighthouse: <b>{{ lighthouse.name }}</b>
                     <div class="my-3"><b>{{model}}</b></div>
+                    <div v-if="agents.list.length > 0" class="my-3">Agents: <a :href="agents.url" target="_blank">{{agents.list.length}}</a></div>
                     <v-alert
                       v-if="modelError!==''"
                       :value="true"
@@ -85,10 +86,11 @@
 <script>
 import { Token } from 'robonomics-js'
 import _findIndex from 'lodash/findIndex'
+import _indexOf from 'lodash/indexOf'
 import getRobonomics from '../utils/robonomics'
 import getIpfs, { cat as ipfsCat } from '../utils/ipfs'
 import rosBag from '../utils/rosBag'
-import { getModel } from '../utils/utils'
+import { getModel, getAgents } from '../utils/utils'
 import * as config from '../config'
 
 let robonomics
@@ -106,7 +108,11 @@ export default {
       demand: null,
       frees: [],
       model: '',
-      modelError: ''
+      modelError: '',
+      agents: {
+        url: '',
+        list: []
+      }
     }
   },
   created () {
@@ -117,6 +123,10 @@ export default {
         } else {
           this.model = r
         }
+        return getAgents()
+      })
+      .then((r) => {
+        this.agents = r
         return getIpfs()
       })
       .then(() => getRobonomics())
@@ -138,6 +148,10 @@ export default {
           robonomics.getResult((msg) => {
             console.log('result unverified', msg)
             if (web3.toChecksumAddress(msg.liability) === web3.toChecksumAddress(robonomics.account)) {
+              if (this.agents.list.length > 0 && _indexOf(this.agents.list, msg.account) < 0) {
+                console.log('Skip result of', msg.account)
+                return
+              }
               const i = _findIndex(this.frees, (item) => {
                 return item.hash === msg.result
               })
