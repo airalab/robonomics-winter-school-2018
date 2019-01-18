@@ -1,6 +1,7 @@
 // import Ipfs from 'ipfs'
 import Promise from 'bluebird'
 import axios from 'axios'
+import _has from 'lodash/has'
 import { IPFS_CONFIG } from '../config'
 
 let ipfs = null
@@ -60,5 +61,11 @@ export const ipfsGateway = (hash) => (
     .then(r => r.data)
 )
 export const cat = (hash) => {
-  return raceToSuccess([ipfs.files.cat(hash), ipfsGateway(hash)])
+  const list = [ipfsGateway(hash)]
+  if (_has(ipfs, 'cat')) {
+    list.push(ipfs.cat(hash))
+  } else if (_has(ipfs, 'files') && _has(ipfs.files, 'cat')) {
+    list.push(ipfs.files.cat(hash))
+  }
+  return raceToSuccess(list)
 }
