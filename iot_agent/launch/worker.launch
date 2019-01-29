@@ -1,0 +1,6 @@
+<launch>
+  <node name="worker" pkg="iot_agent" type="worker_node" output="screen">
+    <!-- A unique model Qm.... -->
+    <param name="model" value="Qmd6bn2JGW26hSx7g5gVCmfgB7uigRPrhAukJn77ee3bMM" />
+  </node>
+</launch>

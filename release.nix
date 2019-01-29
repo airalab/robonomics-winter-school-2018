@@ -8,4 +8,5 @@ let
 in rec {
   fuji_weather = pkgs.callPackage ./fuji_weather { };
   fuji_weather_acl = pkgs.callPackage ./fuji_weather_acl { };
+  iot_agent = pkgs.callPackage ./iot_agent { };
 }
