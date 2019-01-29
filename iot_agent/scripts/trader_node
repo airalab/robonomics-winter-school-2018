@@ -3,6 +3,7 @@
 
 # Standart, System and Third Party
 import time
+from threading import Thread
 
 # ROS
 import rospy
@@ -56,6 +57,8 @@ class TraderNode:
 
     """
 
+    offer = Offer()
+
     def __init__(self):
         rospy.init_node('trader')
         rospy.loginfo('Launching trader node...')
@@ -71,8 +74,6 @@ class TraderNode:
 
         rospy.loginfo('Trader node launched.')
 
-        self.make_offer()
-
     def on_new_liability(self, msg):
         self.make_offer()
         rospy.loginfo("Got new liability %s", msg.address)
@@ -85,36 +86,36 @@ class TraderNode:
     def make_offer(self):
         rospy.loginfo('Making offer...')
 
-        offer = Offer()
-        offer.model = Multihash()
-        offer.model.multihash = rospy.get_param('~model')
-        offer.token = Address()
-        offer.token.address = rospy.get_param('~token')
-        offer.objective = Multihash()
-        offer.objective.multihash = rospy.get_param('~objective')
-        offer.cost = UInt256()
-        offer.cost.uint256 = str(rospy.get_param('~cost'))
-        offer.lighthouse = Address()
-        offer.lighthouse.address = rospy.get_param('~lighthouse')
-        offer.validator = Address()
-        offer.validator.address = '0x0000000000000000000000000000000000000000'
-        offer.lighthouseFee = UInt256()
-        offer.lighthouseFee.uint256 = '0'
-        offer.deadline = UInt256()
-        offer.deadline.uint256 = self.make_deadline()
+        self.offer.model = Multihash()
+        self.offer.model.multihash = rospy.get_param('~model')
+        self.offer.token = Address()
+        self.offer.token.address = rospy.get_param('~token')
+        self.offer.objective = Multihash()
+        self.offer.objective.multihash = rospy.get_param('~objective')
+        self.offer.cost = UInt256()
+        self.offer.cost.uint256 = str(rospy.get_param('~cost'))
+        self.offer.lighthouse = Address()
+        self.offer.lighthouse.address = rospy.get_param('~lighthouse')
+        self.offer.validator = Address()
+        self.offer.validator.address = '0x0000000000000000000000000000000000000000'
+        self.offer.lighthouseFee = UInt256()
+        self.offer.lighthouseFee.uint256 = '0'
+        self.offer.deadline = UInt256()
+        self.offer.deadline.uint256 = self.make_deadline()
 
-        self.signing_offer.publish(offer)
-        rospy.loginfo(offer)
+        self.signing_offer.publish(self.offer)
+        rospy.loginfo(self.offer)
 
-        while True:
+    def _process(self):
+        self.make_offer()
+        while not rospy.is_shutdown():
             current_block = rospy.ServiceProxy('/eth/current_block', BlockNumber)().number
-            # rospy.loginfo(current_block)
-            # rospy.loginfo(offer.deadline.uint256)
-            if current_block > int(offer.deadline.uint256):
+            if current_block > int(self.offer.deadline.uint256):
                 self.make_offer()
             time.sleep(15)
 
     def spin(self):
+        Thread(target=self._process, daemon=True).start()
         rospy.spin()
 
 if __name__ == '__main__':
