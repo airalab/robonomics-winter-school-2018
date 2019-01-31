@@ -5,7 +5,7 @@
     <!-- A unique model Qm.... -->
     <param name="model" value="Qmd6bn2JGW26hSx7g5gVCmfgB7uigRPrhAukJn77ee3bMM" />
     <!-- Objective Qm.... -->
-    <param name="objective" value="QmXs2aHHeCrQEKXxgBHf2Ty24aJayQDfv1BP1tFRWyUzeJ" />
+    <param name="objective" value="QmVAFgUxBitKqtV2sjaYcHkKfcAPVy3GswhaE5n5bcgLkf" />
     <!-- A token your CPS works with, bridged XRT token by default -->
     <param name="token" value="0x925A588BdEC6f5Dd22aB02dfeDcA446eB4aAF50D" />
     <!-- Cost -->
