@@ -9,7 +9,7 @@
     <!-- A token your CPS works with, bridged XRT token by default -->
     <param name="token" value="0x925A588BdEC6f5Dd22aB02dfeDcA446eB4aAF50D" />
     <!-- Cost -->
-    <param name="cost" value="1" />
+    <param name="cost" value="0" />
     <!-- Ethereum blocks lifetime, ~12-15 sec for one -->
     <param name="order_lifetime" value="5" />
   </node>
