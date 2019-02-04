@@ -16,6 +16,7 @@ export const OBJECTIVE_TRADE = 'QmVAFgUxBitKqtV2sjaYcHkKfcAPVy3GswhaE5n5bcgLkf'
 export const IPFS_PUBSUB = 'https://wss.pool.aira.life' // https://github.com/vol4tim/ipfs-api-pubsub-ws
 export const TOKEN = null
 export const PRICE = 0
+export const OFFERS_API = 'https://devjs-01.corp.aira.life:3024/'
 
 export const IPFS_CONFIG = {
   repo: 'ipfs/robonomics',

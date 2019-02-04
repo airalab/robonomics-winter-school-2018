@@ -31,6 +31,7 @@ module.exports = {
     "Web3": true,
     "web3": true,
     "Ipfs": true,
-    "io": true
+    "io": true,
+    "jdenticon": true
   }
 }
