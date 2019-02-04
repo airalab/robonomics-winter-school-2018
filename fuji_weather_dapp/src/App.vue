@@ -14,6 +14,7 @@
                 <v-flex xs12 sm6 class="text-xs-center text-sm-right">
                   <v-btn to="/" outline>Main</v-btn>
                   <v-btn to="/model" outline>Model</v-btn>
+                  <v-btn to="/market" outline>Market</v-btn>
                 </v-flex>
               </v-layout>
             </v-flex>
