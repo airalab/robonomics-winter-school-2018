@@ -1,0 +1,8 @@
+<launch>
+  <node name="trader" pkg="turtlesim_aira" type="trader_node" output="screen">
+    <param name="lighthouse" value="0xE85764E29583224C1D063639d2AeeeD7c389DF4d" />
+    <param name="model" value="QmPVr7k4N2jNiCYjbvQWPcmxzm5jwY3ZHEuJMgbQLmPKvY" />
+    <param name="token" value="0x093ac06910f23570292fd5027a4fA558ed4Cd010" />
+    <param name="order_lifetime" value="10" />
+  </node>
+</launch>

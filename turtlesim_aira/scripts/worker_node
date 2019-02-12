@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+# Standart, System and Third party
+import os
+from collections import namedtuple
+from queue import Queue
+from threading import Thread
+from tempfile import NamedTemporaryFile
+from eth_account.messages import defunct_hash_message
+from eth_account.account import Account
+import ipfsapi
+
+# ROS
+import rospy
+from std_msgs.msg import String
+from std_srvs.srv import Empty
+from turtlesim.msg import Pose, Color
+
+# AIRA
+from ethereum_common.msg import Address
+from robonomics_msgs.msg import Demand, Result
+from robonomics_liability.msg import Liability
+from robonomics_liability.srv import StartLiability, StartLiabilityRequest
+from robonomics_liability.srv import FinishLiability, FinishLiabilityRequest
+
+
+class WorkerNode:
+    liability_queue = Queue()
+    in_process = False
+    master = Address()
+    catalogue = [ 'QmRmj9VnRBbgmQwZMVU3oCinaYG8oh1UAvQJbtPUmEWSq1',
+                  'Qmd1YREP5MMLzoxT2kmvEocPxFMGFiCrLK6zQRmp5ebBqU' ]
+
+    def __init__(self):
+        rospy.init_node('worker')
+        rospy.loginfo('Launching worker node...')
+
+        self.ipfs = ipfsapi.connect('https://ipfs.infura.io', 5001)
+
+        rospy.Subscriber('/liability/infochan/incoming/demand', Demand, self.on_new_demand)
+        self.result = rospy.Publisher('/liability/infochan/eth/signing/result',
+                                      Result, queue_size=128)
+        rospy.Subscriber('/liability/ready', Liability, self.on_new_liability)
+        rospy.Subscriber('next_liability', Liability, self.subscribe_and_start)
+        self.next_liability = rospy.Publisher('next_liability', Liability, queue_size=128)
+        rospy.wait_for_service('liability/finish')
+        self.liability_proxy = namedtuple('liability_srvs_proxy', ['start', 'finish'])(
+                                          rospy.ServiceProxy('liability/start', StartLiability),
+                                          rospy.ServiceProxy('liability/finish', FinishLiability))
+        rospy.loginfo('Worker node launched.')
+
+    def on_new_liability(self, msg):
+        self.liability_queue.put(msg)
+        rospy.loginfo("Got new liability %s", msg.address)
+
+    def _process_liability_queue(self):
+        while not rospy.is_shutdown() and not self.in_process:
+            msg = self.liability_queue.get()
+            self.next_liability.publish(msg)
+
+    def subscribe_and_start(self, liability):
+        rospy.loginfo('Starting process...')
+
+        prefix = '/liability/eth_' + liability.address.address
+        pub = rospy.Publisher(prefix+'/data', String, queue_size=128)
+
+        def callback(duration):
+            rospy.loginfo('New master {} for {} seconds'.format(self.master, duration))
+            pub.publish(String(data='Salut!'))
+
+            self.liability_proxy.finish(liability.address.address, True)
+            def on_timer(event):
+                rospy.loginfo('Liability with master {} complete.')
+                self.master = Address()
+                self.in_process = False
+            rospy.Timer(duration, on_timer, oneshot=True)
+        rospy.Subscriber(prefix + '/duration', String, callback)
+        self.master = liability.promisee
+
+        self.in_process = True
+        self.liability_proxy.start(liability.address.address)
+
+    def on_demand(self, demand: Demand):
+        if demand.model.multihash in self.catalogue:
+            self.ipfs.get(demand.objective.multihash) # 1. get objective
+            os.system('rosbag play ./' + demand.objective.multihash) # 2. play objective
+            pose = rospy.wait_for_message('/turtle1/pose', Pose) # 3. get pose and color
+            color = rospy.wait_for_message('turtle1/color_sensor', Color)
+            sender_account = Account.recoverHash(defunct_hash_message(demand_hash(msg)),
+                                                 signature=msg.signature)
+            result_msg = self._make_result(sender_account, pose, color)
+            self.result.publish(result_msg)
+
+    def _make_result(self, sender_account, pose, color):
+        with NamedTemporaryFile(delete=False) as tmpfile:
+            recorder = Bag(tmpfile.name, 'w')
+            recorder.write('/pose', pose)
+            recorder.write('/color', color)
+            recorder.write('/id', String(data=str(self.ipfs.id())))
+            recorder.close()
+
+            msg = Result()
+            msg.success = True
+            msg.liability = Address()
+            msg.liability.address = sender_account
+            msg.result = Multihash()
+
+            ipfs_response = self.ipfs.add(tmpfile.name)
+            try:
+                msg.result.multihash = ipfs_response['Hash']
+            except TypeError:
+                rospy.logwarn('IPFS add proceeding error: %s', ipfs_response[1]['Message'])
+                msg.result.multihash = ipfs_response[0]['Hash']
+            rospy.loginfo('Result hash: %s', msg.result.multihash)
+            return msg
+
+    def spin(self):
+        Thread(target=self._process_liability_queue, daemon=True).start()
+        rospy.spin()
+
+if __name__ == '__main__':
+    WorkerNode().spin()
