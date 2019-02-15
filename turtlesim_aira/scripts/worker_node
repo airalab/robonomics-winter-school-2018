@@ -13,13 +13,14 @@ import ipfsapi
 
 # ROS
 import rospy
-from std_msgs.msg import String
+import rosbag
+from std_msgs.msg import String, Duration
 from std_srvs.srv import Empty
-from turtlesim.msg import Pose, Color
 
 # AIRA
 from ethereum_common.msg import Address
 from robonomics_msgs.msg import Demand, Result
+#from robonomics_msgs.robonomicsMessageUtils import get_signer_account_address
 from robonomics_liability.msg import Liability
 from robonomics_liability.srv import StartLiability, StartLiabilityRequest
 from robonomics_liability.srv import FinishLiability, FinishLiabilityRequest
@@ -29,8 +30,7 @@ class WorkerNode:
     liability_queue = Queue()
     in_process = False
     master = Address()
-    catalogue = [ 'QmRmj9VnRBbgmQwZMVU3oCinaYG8oh1UAvQJbtPUmEWSq1',
-                  'Qmd1YREP5MMLzoxT2kmvEocPxFMGFiCrLK6zQRmp5ebBqU' ]
+    catalogue = [ 'QmNeMoBUiYjk4VzLtsBe9XAXfpyFawsUd9wEYTQy4tZpEj' ]
 
     def __init__(self):
         rospy.init_node('worker')
@@ -38,7 +38,7 @@ class WorkerNode:
 
         self.ipfs = ipfsapi.connect('https://ipfs.infura.io', 5001)
 
-        rospy.Subscriber('/liability/infochan/incoming/demand', Demand, self.on_new_demand)
+        rospy.Subscriber('/liability/infochan/incoming/demand', Demand, self.on_demand)
         self.result = rospy.Publisher('/liability/infochan/eth/signing/result',
                                       Result, queue_size=128)
         rospy.Subscriber('/liability/ready', Liability, self.on_new_liability)
@@ -61,42 +61,48 @@ class WorkerNode:
 
     def subscribe_and_start(self, liability):
         rospy.loginfo('Starting process...')
-
         prefix = '/liability/eth_' + liability.address.address
-        pub = rospy.Publisher(prefix+'/data', String, queue_size=128)
-
         def callback(duration):
-            rospy.loginfo('New master {} for {} seconds'.format(self.master, duration))
-            pub.publish(String(data='Salut!'))
-
-            self.liability_proxy.finish(liability.address.address, True)
+            rospy.loginfo('Duration: {} seconds'.format(duration))
             def on_timer(event):
-                rospy.loginfo('Liability with master {} complete.')
+                rospy.loginfo('Liability with master {} complete.'.format(self.master))
+                self.liability_proxy.finish(liability.address.address, True)
                 self.master = Address()
                 self.in_process = False
-            rospy.Timer(duration, on_timer, oneshot=True)
-        rospy.Subscriber(prefix + '/duration', String, callback)
+            rospy.Timer(rospy.Duration(duration.data.secs), on_timer, oneshot=True)
+        rospy.Subscriber(prefix + '/duration', Duration, callback)
         self.master = liability.promisee
-
+        rospy.loginfo('New master {}'.format(self.master))
         self.in_process = True
         self.liability_proxy.start(liability.address.address)
 
     def on_demand(self, demand: Demand):
         if demand.model.multihash in self.catalogue:
-            self.ipfs.get(demand.objective.multihash) # 1. get objective
-            os.system('rosbag play ./' + demand.objective.multihash) # 2. play objective
-            pose = rospy.wait_for_message('/turtle1/pose', Pose) # 3. get pose and color
-            color = rospy.wait_for_message('turtle1/color_sensor', Color)
-            sender_account = Account.recoverHash(defunct_hash_message(demand_hash(msg)),
-                                                 signature=msg.signature)
-            result_msg = self._make_result(sender_account, pose, color)
+            rospy.loginfo('In catalogue: {}, executing...'.format(demand.model.multihash))
+            #sender_account = get_signer_account_address(demand)
+            sender_account = '0x00'
+            rospy.loginfo('Sender: {}'.format(sender_account))
+            #TODO:filter by sender
+            rospy.loginfo('1 fetching objective')
+            try:
+                self.ipfs.get(demand.objective.multihash)
+            except:
+                rospy.logwarn('IPFS error. Execution failed.')
+                msg = Result()
+                msg.success = False
+                self.result.publish(msg)
+                return
+            rospy.loginfo('2 executing')
+            os.system('rosbag play ./' + demand.objective.multihash)
+            result_msg = self._make_result(sender_account)
+            rospy.loginfo('3 executing complete, reporting')
             self.result.publish(result_msg)
+        else:
+            rospy.loginfo('Not in catalogue: {}'.format(demand.model.multihash))
 
-    def _make_result(self, sender_account, pose, color):
+    def _make_result(self, sender_account):
         with NamedTemporaryFile(delete=False) as tmpfile:
-            recorder = Bag(tmpfile.name, 'w')
-            recorder.write('/pose', pose)
-            recorder.write('/color', color)
+            recorder = rosbag.Bag(tmpfile.name, 'w')
             recorder.write('/id', String(data=str(self.ipfs.id())))
             recorder.close()
 

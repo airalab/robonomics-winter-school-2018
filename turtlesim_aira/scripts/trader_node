@@ -17,16 +17,16 @@ class TraderNode:
     def __init__(self):
         rospy.init_node('trader')
         rospy.loginfo('Launching trader node...')
-        self.signing_demand = rospy.Publisher('/liability/infochan/eth/signing/demand', Demand, queue_size=128)
+        self.signing_offer = rospy.Publisher('/liability/infochan/eth/signing/offer', Offer, queue_size=128)
         rospy.Subscriber('/liability/infochan/incoming/demand', Demand, self.on_incoming_demand)
         rospy.loginfo('Trader node launched.')
 
     def on_incoming_demand(self, incoming: Demand):
-        rospy.loginfo('Incoming demand %s...', str(incoming_demand))
+        rospy.loginfo('Incoming demand %s...', str(incoming))
         if (incoming.model.multihash == rospy.get_param('~model') and
             incoming.token.address == rospy.get_param('~token')):
-            if incoming.cost > 0:
-                self.make_offer(incoming.objective, incoming.cost)
+            #if int(incoming.cost.uint256) > 0:
+            self.make_offer(incoming.objective, incoming.cost)
             rospy.loginfo('For my model and token!')
         else:
             rospy.loginfo('Not fits my model or token, skip it.')
