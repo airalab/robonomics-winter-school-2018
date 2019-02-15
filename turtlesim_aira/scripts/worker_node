@@ -18,9 +18,10 @@ from std_msgs.msg import String, Duration
 from std_srvs.srv import Empty
 
 # AIRA
+from ipfs_common import Multihash
 from ethereum_common.msg import Address
 from robonomics_msgs.msg import Demand, Result
-#from robonomics_msgs.robonomicsMessageUtils import get_signer_account_address
+from turtlesim_aira.robonomicsMessageUtils import get_signer_account_address
 from robonomics_liability.msg import Liability
 from robonomics_liability.srv import StartLiability, StartLiabilityRequest
 from robonomics_liability.srv import FinishLiability, FinishLiabilityRequest
@@ -64,7 +65,7 @@ class WorkerNode:
         prefix = '/liability/eth_' + liability.address.address
         def callback(duration):
             rospy.loginfo('Duration: {} seconds'.format(duration))
-            def on_timer(event):
+            def on_timer(event)
                 rospy.loginfo('Liability with master {} complete.'.format(self.master))
                 self.liability_proxy.finish(liability.address.address, True)
                 self.master = Address()
@@ -77,33 +78,29 @@ class WorkerNode:
         self.liability_proxy.start(liability.address.address)
 
     def on_demand(self, demand: Demand):
-        if demand.model.multihash in self.catalogue:
-            rospy.loginfo('In catalogue: {}, executing...'.format(demand.model.multihash))
-            #sender_account = get_signer_account_address(demand)
-            sender_account = '0x00'
-            rospy.loginfo('Sender: {}'.format(sender_account))
-            #TODO:filter by sender
-            rospy.loginfo('1 fetching objective')
+        sender_account = get_signer_account_address(demand)
+        rospy.loginfo('Incoming order {} by {}'.format(demand.model.multihash, sender_account))
+        if demand.model.multihash in self.catalogue and sender_account is self.master:
+            rospy.loginfo('Fetching objective...')
             try:
                 self.ipfs.get(demand.objective.multihash)
+                rospy.loginfo('Processing...')
+                os.system('rosbag play ./' + demand.objective.multihash)
+                result_msg = self._make_result(sender_account, demand.objective.multihash)
             except:
                 rospy.logwarn('IPFS error. Execution failed.')
-                msg = Result()
-                msg.success = False
-                self.result.publish(msg)
-                return
-            rospy.loginfo('2 executing')
-            os.system('rosbag play ./' + demand.objective.multihash)
-            result_msg = self._make_result(sender_account)
-            rospy.loginfo('3 executing complete, reporting')
+                result_msg = self._make_result(sender_account, demand.objective.multihash,
+                                               success=False)
+            rospy.loginfo('Process complete, reporting.')
             self.result.publish(result_msg)
         else:
-            rospy.loginfo('Not in catalogue: {}'.format(demand.model.multihash))
+            rospy.loginfo('Model not in catalogue or sender is not master, skiping.')
 
-    def _make_result(self, sender_account):
+    def _make_result(self, sender_account, objective_hash, success=True):
         with NamedTemporaryFile(delete=False) as tmpfile:
             recorder = rosbag.Bag(tmpfile.name, 'w')
             recorder.write('/id', String(data=str(self.ipfs.id())))
+            recorder.write('/objective', String(data=objective_hash))
             recorder.close()
 
             msg = Result()
