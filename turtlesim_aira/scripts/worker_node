@@ -18,7 +18,7 @@ from std_msgs.msg import String, Duration
 from std_srvs.srv import Empty
 
 # AIRA
-from ipfs_common import Multihash
+from ipfs_common.msg import Multihash
 from ethereum_common.msg import Address
 from robonomics_msgs.msg import Demand, Result
 from turtlesim_aira.robonomicsMessageUtils import get_signer_account_address
@@ -65,7 +65,7 @@ class WorkerNode:
         prefix = '/liability/eth_' + liability.address.address
         def callback(duration):
             rospy.loginfo('Duration: {} seconds'.format(duration))
-            def on_timer(event)
+            def on_timer(event):
                 rospy.loginfo('Liability with master {} complete.'.format(self.master))
                 self.liability_proxy.finish(liability.address.address, True)
                 self.master = Address()
@@ -78,9 +78,10 @@ class WorkerNode:
         self.liability_proxy.start(liability.address.address)
 
     def on_demand(self, demand: Demand):
-        sender_account = get_signer_account_address(demand)
+        sender_account = Address(address=get_signer_account_address(demand))
         rospy.loginfo('Incoming order {} by {}'.format(demand.model.multihash, sender_account))
-        if demand.model.multihash in self.catalogue and sender_account is self.master:
+        rospy.loginfo('Current master {}'.format(self.master))
+        if demand.model.multihash in self.catalogue and sender_account == self.master:
             rospy.loginfo('Fetching objective...')
             try:
                 self.ipfs.get(demand.objective.multihash)
@@ -106,7 +107,7 @@ class WorkerNode:
             msg = Result()
             msg.success = True
             msg.liability = Address()
-            msg.liability.address = sender_account
+            msg.liability = sender_account
             msg.result = Multihash()
 
             ipfs_response = self.ipfs.add(tmpfile.name)
