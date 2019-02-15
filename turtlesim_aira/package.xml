@@ -4,14 +4,18 @@
   <version>0.1.1</version>
   <description>turtlesim_aira package</description>
   <author email="a.khssnv@gmail.com">Alisher A. Khassanov</author>
+  <maintainer email="a.khssnv@gmail.com">Alisher A. Khassanov</maintainer>
   <license>BSD3</license>
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>robonomics_msgs</build_depend>
+  <build_depend>robonomics_liability</build_depend>
   <build_depend>rospy</build_depend>
   <build_export_depend>robonomics_msgs</build_export_depend>
+  <build_export_depend>robonomics_liability</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <exec_depend>robonomics_msgs</exec_depend>
+  <exec_depend>robonomics_liability</exec_depend>
   <exec_depend>rospy</exec_depend>
 
   <export>

@@ -14,6 +14,8 @@ mkRosPackage rec {
 
   meta = with stdenv.lib; {
     description = "turtlesim_aira package";
+    homepage = https://github.com/airalab/robonomics-winter-school-2018;
     license = licenses.bsd3;
+    maintainers = [ ];
   };
 }
