@@ -3,6 +3,80 @@
 
 На период заключения договора кредитор может заказывать у turtilesim сервисы прохода по окружности, по часовой стрелке или против.
 
+Установка и запуск сервиса
+--------------------------
+
+Система состоит из трёх частей: веб-интерфейс DApp, AIRA с пакетом `turtlesim_aira`, и робот, в нашем случае симуляция [turtlesim](http://wiki.ros.org/turtlesim).
+
+1. Скачайте образ виртуальной машины с `turtlesim` [по ссылке](https://drive.google.com/file/d/1q-ANERcsjIOHZQSFJSOD6mbqSQmIMdT3), далее будем называть эту машину `hive`.
+> Пользователи GNU/Linux могут использовать `turtlesim` на локальной машине, установив `ROS` [по инструкции](http://wiki.ros.org/melodic/Installation) и пакет [turtlesim](http://wiki.ros.org/turtlesim). Для установки ROS в NixOS используйте канал [airapkgs](https://github.com/airalab/airapkgs).
+
+1. Для подключения `hive` к `AIRA` создайте в VirtualBox виртуальную сеть между машинами.
+Для этого в окне VirtualBox Manager: Файл -> Менеджер сетей хоста.
+В появившемся окне нажмите "Создать". В списке появится созданная сеть, в ней включить `DHCP сервер` установкой галочки в чекбокс в конце строки.
+
+1. Импортируйте скачанный ранее образ `hive`.
+1. Подключите AIRA к виртуальному адаптеру. Для этого в настройках машины перейдите в раздел "Сеть" и во вкладке "Адаптер 2" включите сетевой адаптер с типом подключения "Виртуальный адаптер хоста".
+1. Запустите обе виртуальные машины.
+1. Теперь нужно сообщить машинам имена и IP-адреса друг друга. Для этого в терминалах каждой из машин наберите:
+```console
+ip a | awk '{print $2}' | egrep -o '192.168.56.[0-9]{,}'
+```
+И запишите полученные IP-адреса.
+1. Теперь в конфигурации AIRA добавьте адрес `hive`.
+Откройте файл конфигурации.
+```console
+nano /etc/nixos/configuration.nix
+```
+Под строчкой `imports = [ ...` добавьте
+```console
+networking.extraHosts = "<IP Адрес hive> hive";
+networking.hostName = "aira";
+```
+Закройте текстовый редактор с сохранением изменений `Ctrl-x, y` и запустите смену поколения AIRA.
+```console
+nixos-rebuild switch --fast
+```
+1. Теперь добавьте `aira` в `hive`. Для этого в терминале `hive`:
+```console
+sudo nano /etc/hosts
+```
+В файле найдите строчку вида `<IP адрес> aira` и замените IP-адрес на адрес Вашего `hive`.
+
+1. Проверьте наличие связи между машинами. Для этого в `hive` запустите:
+```console
+ping aira
+```
+Если всё сделано правильно, каждую секунду будет появляться сообщение с временем прохода пакета от `hive` к `aira`.
+То же самое из AIRA в `hive`:
+```console
+ping hive
+```
+В случае проблем обратитесь к инжерам в чате школы.
+
+1. Устанвите и запустите `turtlesim_aira` в AIRA. Для этого в терминале AIRA:
+```console
+cd robonomics-winter-school-2018
+nix build -f ./release.nix turtlesim_aira
+source ./result/setup.zsh
+roslaunch turtlesim_aira trader.launch
+```
+И в другом окне:
+```console
+source ./result/setup.zsh
+roslaunch turtlesim_aira worker.launch
+```
+
+1. Подключите `hive` к `rosmaster` в AIRA и запустите `turtlesim`. Для этого в терминале `hive`:
+```console
+export ROS_MASTER_URI=http://aira:11311
+rosrun turtlesim turtlesim_node
+```
+
+Пользователь | Пароль
+-------------|-------
+engi         | engi
+
 IPFS хэш                                       | Имя файла
 -----------------------------------------------|-------------------------------------------------------
 QmPVr7k4N2jNiCYjbvQWPcmxzm5jwY3ZHEuJMgbQLmPKvY | turtlesim_aira_order_allow.model
