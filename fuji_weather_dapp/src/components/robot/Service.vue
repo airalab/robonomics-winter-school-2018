@@ -50,6 +50,7 @@
 
 <script>
 import _find from 'lodash/find'
+import _findIndex from 'lodash/findIndex'
 import _has from 'lodash/has'
 import getRobonomics from '../../utils/robonomics'
 import getIpfs, { cat as ipfsCat } from '../../utils/ipfs'
@@ -108,7 +109,7 @@ export default {
         robonomics.getResult((msg) => {
           console.log('result', msg)
           if (robonomics.web3.toChecksumAddress(msg.liability) === robonomics.web3.toChecksumAddress(robonomics.account)) {
-            this.setResult(msg.result)
+            this.setResult(msg.result, msg.success)
           }
         })
       })
@@ -145,26 +146,19 @@ export default {
           })
       })
     },
-    setResult (result) {
+    setResult (result, success) {
       let actionId = 0
-      let actionStatus = false
       ipfsCat(result)
         .then((r) => {
           return rosBag(new Blob([r]), (bag) => {
-            if (bag.topic === '/agent/objective/id_serial') {
-              if (bag.message.data === 'test') {
-                actionId = 1
-              }
-            } else if (bag.topic === '/agent/objective/drone_type') {
-              if (bag.message.data === 'ddd') {
-                actionStatus = true
-              }
+            if (bag.topic === '/objective') {
+              actionId = _findIndex(this.actions, { objective: bag.message.data })
             }
-          }, {})
+          }, { topics: ['/objective'] })
         })
         .then(() => {
           if (_has(this.actions, actionId)) {
-            if (actionStatus) {
+            if (success) {
               this.logs.push({
                 type: 2,
                 msg: `Done action "${this.actions[actionId].name}"`
