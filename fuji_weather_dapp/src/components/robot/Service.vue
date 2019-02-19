@@ -73,8 +73,7 @@ export default {
         loading: false,
         name: config.ACTION.objectives[r].label,
         model: config.ACTION.model,
-        objective: config.ACTION.objectives[r].objective,
-        result: 'QmSKmcZscjDCkHx4db5mHkhbtmeWfUEMcmTpwhpnwWaLAJ',
+        objective: config.ACTION.objectives[r].objective
       })
     })
     return getIpfs()
@@ -122,7 +121,7 @@ export default {
       })
     },
     setResult (result, success) {
-      let actionId = 0
+      let actionId = -1
       ipfsCat(result)
         .then((r) => {
           return rosBag(new Blob([r]), (bag) => {
@@ -132,7 +131,7 @@ export default {
           }, { topics: ['/objective'] })
         })
         .then(() => {
-          if (_has(this.actions, actionId)) {
+          if (actionId >= 0 && _has(this.actions, actionId)) {
             if (success) {
               this.logs.push({
                 type: 2,
