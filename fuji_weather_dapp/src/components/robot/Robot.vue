@@ -92,7 +92,6 @@
 </template>
 
 <script>
-import _has from 'lodash/has'
 import { Liability } from 'robonomics-js'
 import getRobonomics from '../../utils/robonomics'
 import { formatDecimals, watchTx } from '../../utils/utils'
@@ -232,27 +231,22 @@ export default {
         check
       }
       if (this.liability.resultMessage.length === 0) {
-        this.liability.resultMessage.push('')
+        this.liability.resultMessage.push({
+          type: 2,
+          str: ''
+        })
         ipfsCat(result)
           .then((r) => {
             rosBag(new Blob([r]), (bag) => {
               try {
                 const json = JSON.parse(bag.message.data)
-                if (_has(json, 'weather')) {
-                  this.liability.resultMessage.push({
-                    type: 1,
-                    json,
-                    str: JSON.stringify(json, undefined, 2)
-                  })
-                } else {
-                  this.liability.resultMessage.push({
-                    type: 2,
-                    str: JSON.stringify(json, undefined, 2)
-                  })
-                }
+                this.liability.resultMessage.push({
+                  type: 1,
+                  str: JSON.stringify(json, undefined, 2)
+                })
               } catch (e) {
                 this.liability.resultMessage.push({
-                  type: 3,
+                  type: 2,
                   str: bag.message.data
                 })
               }
@@ -298,9 +292,10 @@ export default {
         }
         robonomics.postDemand(config.RUN.model, demand)
           .then((liability) => {
-            // this.newLiability(liability)
             this.$refs.liabilityForm.address = liability.address
-            this.show()
+            setTimeout(() => {
+              this.show()
+            }, 500);
           })
           .then(() => {
             this.loadingOrder = false

@@ -2,24 +2,25 @@
   <v-card>
     <v-card-title primary-title>
       <div>
-        <h3 class="headline mb-0">Liability <a :href="`https://etherscan.io/address/${liability.address}`" target="_blank">{{ liability.address }}</a></h3>
+        <h3 class="headline mb-0">Liability {{ liability.address }}</h3>
       </div>
     </v-card-title>
     <v-card-text>
-      <div v-if="liability.isFinalized">
-        <span v-if="liability.result != ''">
-          <b>Results: </b>
-          <a :href="`https://ipfs.io/ipfs/${liability.result}`" target="_blank">{{ liability.result }}</a>
-          <v-icon v-if="liability.check === true" large color="green darken-2">mdi-check</v-icon>
-          <v-icon v-if="liability.check === false" large color="blue-grey darken-2">mdi-alert-circle-outline</v-icon>
-          <br/>
-          <span v-for="(res, resIndex) in liability.resultMessage" :key="resIndex">
-            {{ res }}<br />
-          </span>
-        </span>
-        <span v-if="liability.result == ''">
-          <b>Results: </b><v-progress-linear :indeterminate="true"></v-progress-linear>
-        </span>
+      <div v-if="liability.result != ''">
+        <b>Results: </b>
+        <a :href="`https://ipfs.io/ipfs/${liability.result}`" target="_blank">{{ liability.result }}</a>
+        <v-icon v-if="liability.check === true" large color="green darken-2">mdi-check</v-icon>
+        <v-icon v-if="liability.check === false" large color="blue-grey darken-2">mdi-alert-circle-outline</v-icon>
+        <br/>
+        <v-progress-linear v-if="liability.resultMessage.length <= 1" :indeterminate="true"></v-progress-linear>
+        <div v-else>
+          <div v-for="(item, i) in liability.resultMessage" :key="i">
+            <div v-if="item.type === 1">
+              <code style="width:100%"><pre>{{ item.str }}</pre></code>
+            </div>
+            <p v-else>{{ item.str }}</p>
+          </div>
+        </div>
       </div>
       <div v-else>
         <span v-for="(action, i) in actions" :key="i">
@@ -49,7 +50,6 @@
 </template>
 
 <script>
-import _find from 'lodash/find'
 import _findIndex from 'lodash/findIndex'
 import _has from 'lodash/has'
 import getRobonomics from '../../utils/robonomics'
@@ -77,20 +77,6 @@ export default {
         result: 'QmSKmcZscjDCkHx4db5mHkhbtmeWfUEMcmTpwhpnwWaLAJ',
       })
     })
-    // this.actions.push({
-    //   loading: false,
-    //   name: 'action 1',
-    //   model: 'QmXs2aHHeCrQEKXxgBHf2Ty24aJayQDfv1BP1tFRWyUze1',
-    //   objective: 'QmXs2aHHeCrQEKXxgBHf2Ty24aJayQDfv1BP1tFRWyUze1',
-    //   result: 'QmSKmcZscjDCkHx4db5mHkhbtmeWfUEMcmTpwhpnwWaLAJ',
-    // })
-    // this.actions.push({
-    //   loading: false,
-    //   name: 'action 2',
-    //   model: 'QmXs2aHHeCrQEKXxgBHf2Ty24aJayQDfv1BP1tFRWyUze2',
-    //   objective: 'QmXs2aHHeCrQEKXxgBHf2Ty24aJayQDfv1BP1tFRWyUze2',
-    //   result: 'QmSKmcZscjDCkHx4db5mHkhbtmeWfUEMcmTpwhpnwWaLAJ',
-    // })
     return getIpfs()
       .then(() => getRobonomics())
       .then((r) => {
@@ -100,11 +86,6 @@ export default {
       .then(() => {
         robonomics.getDemand(null, (msg) => {
           console.log('demand', msg)
-          const action = _find(this.actions, { model: msg.model })
-          if (action) {
-            // emulator kfc
-            // return this.emulatorKfc(action)
-          }
         })
         robonomics.getResult((msg) => {
           console.log('result', msg)
@@ -115,12 +96,6 @@ export default {
       })
   },
   methods: {
-    emulatorKfc (action) {
-      robonomics.postResult({ liability: robonomics.account, success: true, result: action.result })
-        .then(() => {
-          console.log('result send msg')
-        })
-    },
     runAction (id) {
       this.actions[id].loading = true
       robonomics.web3.eth.getBlock('latest', (e, r) => {
