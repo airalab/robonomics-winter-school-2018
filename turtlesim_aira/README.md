@@ -36,6 +36,7 @@ nano /etc/nixos/configuration.nix
 ```console
 networking.extraHosts = "<IP Адрес hive> hive";
 networking.hostName = "aira";
+networking.firewall.enable = false;
 ```
 Закройте текстовый редактор с сохранением изменений `Ctrl-x, y` и запустите новую конфигурацию:
 ```console
