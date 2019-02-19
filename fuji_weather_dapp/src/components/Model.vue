@@ -196,7 +196,7 @@ export default {
             .then(() => {
               this.loadingOrder = false
             })
-            .catch((e) => {
+            .catch(() => {
               this.loadingOrder = false
             })
         })

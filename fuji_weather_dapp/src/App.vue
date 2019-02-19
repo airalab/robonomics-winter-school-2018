@@ -15,6 +15,7 @@
                   <v-btn to="/" outline>Main</v-btn>
                   <v-btn to="/model" outline>Model</v-btn>
                   <v-btn to="/market" outline>Market</v-btn>
+                  <v-btn to="/robot" outline>Robot</v-btn>
                 </v-flex>
               </v-layout>
             </v-flex>

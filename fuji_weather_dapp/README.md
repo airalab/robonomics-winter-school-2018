@@ -1,20 +1,23 @@
 # hello_aira_dapp
 
-> A Vue.js project
+> Robonomics lighthouse airalab.lighthouse.4.robonomics.sid
 
-## Build Setup
-
-``` bash
-# install dependencies
-npm install
-
-# serve with hot reload at localhost:8080
-npm run dev
-
-# build for production with minification
-npm run build
+## Project setup
+```
+yarn install
 ```
 
-## Change configuration file
+### Compiles and hot-reloads for development
+```
+yarn run serve
+```
 
-> src/config.js
+### Compiles and minifies for production
+```
+yarn run build
+```
+
+### Lints and fixes files
+```
+yarn run lint
+```
