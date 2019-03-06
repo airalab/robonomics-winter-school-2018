@@ -94,6 +94,8 @@ rosrun turtlesim turtlesim_node
 ```
 
 Готово! Теперь AIRA подключена к симуляции робота в `turtlesim`.
+Интерфейс для управления по ссылке:
+> https://airalab.github.io/robonomics-winter-school-2018/#/robot
 
 Параметры
 ---------
