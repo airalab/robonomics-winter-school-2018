@@ -67,7 +67,13 @@ ping hive
 ```
 В случае проблем обратитесь к инженерам в чате школы.
 
-10. Устанвите и запустите `turtlesim_aira` в AIRA. Для этого в терминале AIRA:
+10. В AIRA должны быть запущены системные сервисы `erc20` и `liability` для связи Вашего экземпляра с Робономикой.
+Запустите эти сервисы следующей командой.
+```console
+systemctl restart liability erc20
+```
+
+11. Устанвите и запустите `turtlesim_aira` в AIRA. Для этого в терминале AIRA:
 ```console
 cd robonomics-winter-school-2018
 git pull
@@ -81,7 +87,7 @@ source ./result/setup.zsh
 roslaunch turtlesim_aira worker.launch
 ```
 
-11. Подключите `hive` к `rosmaster` в AIRA и запустите `turtlesim`. Для этого в терминале `hive`:
+12. Подключите `hive` к `rosmaster` в AIRA и запустите `turtlesim`. Для этого в терминале `hive`:
 ```console
 export ROS_MASTER_URI=http://aira:11311
 rosrun turtlesim turtlesim_node
