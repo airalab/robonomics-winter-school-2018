@@ -11,7 +11,7 @@ The system consists of three parts: a DApp web-interface, AIRA with the `turtles
 1. Download the image of the virtual machine with `turtlesim` using [this link](https://drive.google.com/file/d/1q-ANERcsjIOHZQSFJSOD6mbqSQmIMdT3), then we will call this machine `hive`.
 
 User         | Password
--------------|-------
+-------------|---------
 engi         | engi
 
 > GNU / Linux users can use `turtlesim` on their local machine by installing `ROS` according to [the instruction](http://wiki.ros.org/melodic/Installation) and [the turtlesim package](http://wiki.ros.org/turtlesim). To install ROS on NixOS, use [the airapkgs channel](https://github.com/airalab/airapkgs).
@@ -120,7 +120,7 @@ Field / Topic| Type          | Meaning
 -------------|---------------|--------------------------------------
 success	     | std_msgs/Bool | False - not executed, True - executed
 
-### Заказ
+### Order
 
 Field / Topic| Type            | Meaning
 -------------|-----------------|-------------------------------------
