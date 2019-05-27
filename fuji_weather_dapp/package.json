@@ -10,27 +10,28 @@
     "deploy": "npm run build && gh-pages -d dist"
   },
   "dependencies": {
+    "@babel/polyfill": "^7.4.4",
     "axios": "^0.18.0",
-    "babel-polyfill": "^6.26.0",
-    "bluebird": "^3.5.3",
+    "bluebird": "^3.5.5",
+    "core-js": "^2.6.5",
     "lodash": "^4.17.11",
-    "robonomics-js": "^0.4.1",
-    "rosbag": "^1.1.0",
-    "vue": "^2.5.21",
-    "vue-router": "^3.0.2",
-    "vue-web3-check": "^1.2.0",
-    "vuetify": "^1.4.3"
+    "robonomics-js": "^0.5.1",
+    "rosbag": "^2.1.0",
+    "vue": "^2.6.10",
+    "vue-router": "^3.0.6",
+    "vue-web3-check": "^1.4.0",
+    "vuetify": "^1.5.14"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.3.0",
-    "@vue/cli-plugin-eslint": "^3.3.0",
-    "@vue/cli-service": "^3.3.0",
+    "@vue/cli-plugin-babel": "^3.8.0",
+    "@vue/cli-plugin-eslint": "^3.8.0",
+    "@vue/cli-service": "^3.8.0",
     "babel-eslint": "^10.0.1",
-    "eslint": "^5.8.0",
+    "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
     "gh-pages": "^2.0.1",
     "rimraf": "^2.6.3",
-    "vue-template-compiler": "^2.5.21"
+    "vue-template-compiler": "^2.6.10"
   },
   "eslintConfig": {
     "root": true,
@@ -62,7 +63,6 @@
   },
   "browserslist": [
     "> 1%",
-    "last 2 versions",
-    "not ie <= 8"
+    "last 2 versions"
   ]
 }
