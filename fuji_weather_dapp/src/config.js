@@ -1,25 +1,24 @@
-export const VERSION = 4
+export const VERSION = 5;
 export const ROBONOMICS = {
   1: {
     ens: '',
     ensSuffix: '',
-    lighthouse: 'airalab.lighthouse.4.robonomics.eth'
+    lighthouse: 'airalab.lighthouse.5.robonomics.eth'
   },
-  355: {
-    ens: '0x4e978ed8a05b516d8130ff7df54fbc8b7ceb6442',
+  4451: {
+    ens: '0xaC4Ac4801b50b74aa3222B5Ba282FF54407B3941',
     ensSuffix: 'sid',
-    lighthouse: 'airalab.lighthouse.4.robonomics.sid'
+    lighthouse: 'airalab.lighthouse.5.robonomics.sid'
   }
-}
-export const MODEL_TRADE = 'Qmd6bn2JGW26hSx7g5gVCmfgB7uigRPrhAukJn77ee3bMM'
-export const OBJECTIVE_TRADE = 'QmVAFgUxBitKqtV2sjaYcHkKfcAPVy3GswhaE5n5bcgLkf'
-export const IPFS_PUBSUB = 'https://wss.pool.aira.life' // https://github.com/vol4tim/ipfs-api-pubsub-ws
-export const OFFERS_API = 'https://devjs-01.corp.aira.life:3024/'
+};
+export const MODEL_TRADE = 'Qmd6bn2JGW26hSx7g5gVCmfgB7uigRPrhAukJn77ee3bMM';
+export const OBJECTIVE_TRADE = 'QmVAFgUxBitKqtV2sjaYcHkKfcAPVy3GswhaE5n5bcgLkf';
+export const OFFERS_API = 'https://devjs-01.corp.aira.life:3024/';
 
-export const TOKEN = null
-export const TOKEN_SYMBOL = 'XRT'
-export const TOKEN_DECIMALS = 9
-export const PRICE = 0
+export const TOKEN = null;
+export const TOKEN_SYMBOL = 'XRT';
+export const TOKEN_DECIMALS = 9;
+export const PRICE = 0;
 
 export const RUN = {
   model: 'QmPVr7k4N2jNiCYjbvQWPcmxzm5jwY3ZHEuJMgbQLmPKvY',
@@ -37,26 +36,32 @@ export const RUN = {
       label: '60s'
     }
   }
-}
+};
 export const ACTION = {
   model: 'QmNeMoBUiYjk4VzLtsBe9XAXfpyFawsUd9wEYTQy4tZpEj',
   objectives: {
-    'clockwise': {
+    clockwise: {
       objective: 'QmRmj9VnRBbgmQwZMVU3oCinaYG8oh1UAvQJbtPUmEWSq1',
       label: 'clockwise'
     },
-    'counterclockwise': {
+    counterclockwise: {
       objective: 'Qmd1YREP5MMLzoxT2kmvEocPxFMGFiCrLK6zQRmp5ebBqU',
       label: 'counterclockwise'
     }
   }
-}
+};
 
 export const IPFS_CONFIG = {
   repo: 'ipfs/robonomics',
-  // EXPERIMENTAL: {
-  //   pubsub: true
-  // },
+  relay: {
+    enabled: true,
+    hop: {
+      enabled: true
+    }
+  },
+  EXPERIMENTAL: {
+    pubsub: true
+  },
   config: {
     Addresses: {
       Swarm: [
@@ -75,4 +80,4 @@ export const IPFS_CONFIG = {
       '/dns4/wss.ipfs.pool.aira.life/tcp/443/wss/ipfs/QmdfQmbmXt6sqjZyowxPUsmvBsgSGQjm4VXrV7WGy62dv8'
     ]
   }
-}
+};
