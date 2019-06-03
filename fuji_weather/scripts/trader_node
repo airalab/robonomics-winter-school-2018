@@ -59,13 +59,17 @@ class TraderNode:
         rospy.wait_for_service('/eth/current_block')
         rospy.wait_for_service('/eth/accounts')
         self.accounts = rospy.ServiceProxy('/eth/accounts', Accounts)()
-        rospy.loginfo(str(self.accounts)) # AIRA ethereum addresses
+        rospy.loginfo(str(self.accounts))  # AIRA ethereum addresses
 
-        self.signing_demand = rospy.Publisher('/liability/infochan/eth/signing/demand', Demand, queue_size=128)
-        self.signing_offer = rospy.Publisher('/liability/infochan/eth/signing/offer', Offer, queue_size=128)
+        self.signing_demand = rospy.Publisher(
+            '/liability/infochan/eth/signing/demand', Demand, queue_size=128)
+        self.signing_offer = rospy.Publisher(
+            '/liability/infochan/eth/signing/offer', Offer, queue_size=128)
 
-        rospy.Subscriber('/liability/infochan/incoming/demand', Demand, self.on_incoming_demand)
-        rospy.Subscriber('/liability/infochan/incoming/offer', Offer, self.on_incoming_offer)
+        rospy.Subscriber('/liability/infochan/incoming/demand',
+                         Demand, self.on_incoming_demand)
+        rospy.Subscriber('/liability/infochan/incoming/offer',
+                         Offer, self.on_incoming_offer)
 
         rospy.loginfo('Trader node launched.')
 
@@ -74,32 +78,34 @@ class TraderNode:
         # if incoming[0] == 'offer':
         #     self.make_demand(incoming[1].objective, incoming[1].cost) # to publish a demand
         if incoming[0] == 'demand':
-            self.make_offer(incoming[1].objective, incoming[1].cost) # to publish an offer
+            # to publish an offer
+            self.make_offer(incoming[1].objective, incoming[1].cost)
         # TODO: PLEASE IMPLEMENT YOUR TRADING STRATEGY HERE
         pass
 
     def on_incoming_demand(self, incoming_demand: Demand):
         rospy.loginfo('Incoming demand %s...', str(incoming_demand))
         if (incoming_demand.model.multihash == rospy.get_param('~model') and
-            incoming_demand.token.address == rospy.get_param('~token')):
+                incoming_demand.token.address == rospy.get_param('~token')):
             rospy.loginfo('For my model and token!')
-            self.act(('demand', incoming_demand)) # reactive strategy
+            self.act(('demand', incoming_demand))  # reactive strategy
         else:
             rospy.loginfo('Not fits my model or token, skip it.')
 
     def on_incoming_offer(self, incoming_offer: Offer):
         rospy.loginfo('Incoming offer %s...', str(incoming_offer))
         if (incoming_offer.model.multihash == rospy.get_param('~model') and
-            incoming_offer.token.address == rospy.get_param('~token')):
+                incoming_offer.token.address == rospy.get_param('~token')):
             rospy.loginfo('For my model and token!')
 
-            self.act(('offer', incoming_offer)) # reactive strategy
+            self.act(('offer', incoming_offer))  # reactive strategy
         else:
             rospy.loginfo('Not fits my model or token, skip it.')
 
     def make_deadline(self):
         lifetime = int(rospy.get_param('~order_lifetime'))
-        deadline = rospy.ServiceProxy('/eth/current_block', BlockNumber)().number + lifetime
+        deadline = rospy.ServiceProxy(
+            '/eth/current_block', BlockNumber)().number + lifetime
         return str(deadline)
 
     def make_demand(self, objective, cost):
@@ -146,6 +152,7 @@ class TraderNode:
 
     def spin(self):
         rospy.spin()
+
 
 if __name__ == '__main__':
     TraderNode().spin()

@@ -19,7 +19,7 @@
     "rosbag": "^2.1.0",
     "vue": "^2.6.10",
     "vue-router": "^3.0.6",
-    "vue-web3-check": "^1.4.0",
+    "vue-web3-check": "^1.4.2",
     "vuetify": "^1.5.14"
   },
   "devDependencies": {
