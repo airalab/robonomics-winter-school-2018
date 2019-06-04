@@ -8305,10 +8305,10 @@ vue-template-es2015-compiler@^1.9.0:
   resolved "https://registry.yarnpkg.com/vue-template-es2015-compiler/-/vue-template-es2015-compiler-1.9.1.tgz#1ee3bc9a16ecbf5118be334bb15f9c46f82f5825"
   integrity sha512-4gDntzrifFnCEvyoO8PqyJDmguXgVPxKiIxrBKjIowvL9l+N66196+72XVYR8BBf1Uv1Fgt3bGevJ+sEmxfZzw==
 
-vue-web3-check@^1.4.0:
-  version "1.4.0"
-  resolved "https://registry.yarnpkg.com/vue-web3-check/-/vue-web3-check-1.4.0.tgz#9ab2da15ee3450cd2c11180b1159c34888accdeb"
-  integrity sha512-aNc2H6pNvLv2Z8cDl+bUsra8anelqOIrwNr8UTuskfFSi245q2mKYD50Tcuy3o5kb5ox7ffnQYuoLSuP+3GNHg==
+vue-web3-check@^1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/vue-web3-check/-/vue-web3-check-1.4.2.tgz#c7fa3fea522d2047f4d125feb36c2fc750da2441"
+  integrity sha512-EQMHZ4/o3u5/9IpVJAZ0dJfKq3DiIiH8JQRgSidzKHy6/0ZcaE14LTaHQZcLlQwTTZGWLIwFXcEKStxNXWbxMQ==
   dependencies:
     vue-fragment "^1.5.1"
 
