@@ -3,17 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "clean": "rimraf dist",
     "serve": "vue-cli-service serve",
     "build": "npm run clean && vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "deploy": "npm run build && gh-pages -d dist"
+    "deploy": "npm run build && gh-pages -d dist",
+    "clean": "rimraf dist"
   },
   "dependencies": {
     "@babel/polyfill": "^7.4.4",
     "axios": "^0.18.1",
     "bluebird": "^3.5.5",
-    "core-js": "^2.6.5",
+    "core-js": "^3.3.2",
     "lodash": "^4.17.13",
     "robonomics-js": "^0.5.1",
     "rosbag": "^2.1.0",
@@ -23,9 +23,9 @@
     "vuetify": "^1.5.14"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "^3.8.0",
-    "@vue/cli-plugin-eslint": "^3.8.0",
-    "@vue/cli-service": "^3.8.0",
+    "@vue/cli-plugin-babel": "^4.0.5",
+    "@vue/cli-plugin-eslint": "^4.0.5",
+    "@vue/cli-service": "^4.0.5",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
