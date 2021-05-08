@@ -14,7 +14,7 @@
     "axios": "^0.18.1",
     "bluebird": "^3.5.5",
     "core-js": "^3.3.2",
-    "lodash": "^4.17.13",
+    "lodash": "^4.17.21",
     "robonomics-js": "^0.5.1",
     "rosbag": "^2.1.0",
     "vue": "^2.6.10",
